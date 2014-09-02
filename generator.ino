@@ -2,12 +2,9 @@
 //MOTOR DRIVER
 const int motorAPin1 = 9;   // AIN1
 const int motorAPin2 = 8;   // AIN2
-const int motorBPin1 = 10;  // BIN1
-const int motorBPin2 = 11;  // BIN2
 const int enablePin = 2;    // H-bridge enable pin
 const int ledPin = 12;      // LED 
 const int PWMA = 3;         // Pulse Width Modulation Motor A
-const int PWMB = 5;         // Pulse Width Modulation Motor B
 float Temp;
 float psi;
 float psiold;
@@ -15,11 +12,14 @@ float psicounter;
 unsigned long starttime1 =0;
 unsigned long starttime =0;
 unsigned long starttime2 =0;
+unsigned long starttime3 =0;
 int rxnstart =0;
+String state;
 
 unsigned long timer = 0;
 unsigned long timer2 = 0;
 unsigned long timer3 =0;
+unsigned long timer4 =0;
 
 int offstate = 0;
 //MOSFET CONFIGURATION
@@ -40,12 +40,10 @@ void setup() {
   // set MOTOR DRIVER outputs:
   pinMode(motorAPin1, OUTPUT); 
   pinMode(motorAPin2, OUTPUT); 
-  pinMode(motorBPin1, OUTPUT);
-  pinMode(motorBPin2, OUTPUT);
   pinMode(enablePin, OUTPUT);
   pinMode(ledPin, OUTPUT);
   pinMode(PWMA, OUTPUT);
-  pinMode(PWMB, OUTPUT);
+  pinMode(11,OUTPUT);
   // set enablePin high so that motor can turn on:
   
   pinMode(switchPin, OUTPUT);
@@ -101,14 +99,14 @@ void loop() {
  
   //Temperature
   if (resistance>2.085){
-  //Temp = (0.0003*(pow(resistance,4)) - 0.025*(pow(resistance,3))+0.7629*(pow(resistance,2))-11.246*(resistance)+82.423);
-  Temp = 50;
+  Temp = (0.0003*(pow(resistance,4)) - 0.025*(pow(resistance,3))+0.7629*(pow(resistance,2))-11.246*(resistance)+82.423);
+  //Temp = 50;
   //Serial.print("T");
   //Serial.println(Temp);
   }
   else{
-  //Temp = -33.45*log(resistance)+ 87.956;
-  Temp = 50;
+  Temp = -33.45*log(resistance)+ 87.956;
+  //Temp = 50;
   //Serial.print("T");
   //Serial.println(Temp); 
   }
@@ -122,7 +120,8 @@ while (analogRead(A1) >2){
 
   if (offstate == 1){
     digitalWrite(enablePin, LOW);
-    Serial.print("offliao ");
+    //Serial.print("offliao ");
+    state = "offliao";
     prints();
   }
   
@@ -132,21 +131,23 @@ while (analogRead(A1) >2){
     starttime1 = millis();
     timer = 1;
     }
-    if (timer <= 50){
+    if (timer <= 100){
       digitalWrite(enablePin, HIGH);
       digitalWrite(purgePin, LOW);
-      Serial.print("stateon1 ");
+      //Serial.print("stateon1 ");
+      state = "stateon1";
       prints();
       timer = millis()-starttime1 + 1;
     }
-    if (timer >50 && timer <= 2000){
+    if (timer >100 && timer <= 2500){
       digitalWrite(enablePin, LOW);
       digitalWrite(purgePin, LOW);
-      Serial.print("stateoff1 ");
+      //Serial.print("stateoff1 ");
+      state="stateoff1";
       prints();
       timer = millis()-starttime1 + 1;
     }
-    if (timer >2000){
+    if (timer >2500){
       timer = 0;
     }
     
@@ -165,21 +166,23 @@ while (analogRead(A1) >2){
     starttime2 = millis();
     timer2 = 1;
     }
-    if (timer2 <= 250){
+    if (timer2 <= 50){
       digitalWrite(enablePin, HIGH);
       digitalWrite(purgePin, LOW);
-      Serial.print("stateon2 ");
+      //Serial.print("stateon2 ");
+      state="stateon2";
       prints();
      timer2 = millis()-starttime2 + 1; 
     }
-    if (timer2 >250 && timer2 <= 3000){
+    if (timer2 >50 && timer2 <= 2500){
       digitalWrite(enablePin, LOW);
       digitalWrite(purgePin, LOW);
-      Serial.print("stateoff2 ");
+      //Serial.print("stateoff2 ");
+      state="stateoff2";
       prints();
       timer2 = millis()-starttime2 +1;
     }
-    if (timer2 >3000){
+    if (timer2 >2500){
       timer2 = 0;
     }
   }
@@ -190,40 +193,56 @@ while (analogRead(A1) >2){
     timer2 =0;
    digitalWrite(purgePin, HIGH);
    digitalWrite(enablePin, LOW);
-    Serial.print("purging");
+   state="purging";
+    //Serial.print("purging");
     prints();
   }
   
-  if (psi <= 4 && offstate == 0 && rxnstart == 1 && Temp < 100){ 
-    if (timer3 == 0){
-    starttime = millis();
-    timer3 = 1;
-    }
-    if (timer3 <= 10000 && timer3 > 0){
-      timer3 = millis() - starttime + 1;
-      Serial.print("pendingstop");
-    }
-    if (timer3 > 10000){
-      offstate = 1;
-    }
+ // if (psi <= 4 && offstate == 0 && rxnstart == 1 && Temp < 100){ 
+    //if (timer3 == 0){
+    //starttime = millis();
+    //timer3 = 1;
+    //}
+    //if (timer3 <= 10000 && timer3 > 0){
+      //timer3 = millis() - starttime + 1;
+      //Serial.print("pendingstop");
+      //state="pendingstop";
+    //}
+    //if (timer3 > 10000){
+      //offstate = 1;
+    //}
   }
   
   
- 
+
+  
      
-}
-     
-     void prints (){
-        Serial.print(" ");
-        Serial.print(timer);
-           Serial.print(" ");
-        Serial.print(timer2);
-           Serial.print(" ");
-        Serial.print(timer3);
-       Serial.print(offstate);
-        Serial.print(" ");
+void prints (){
+   if (timer4 ==0){
+    starttime3 =millis();
+   timer4 =1; 
+   }
+   if (timer4 <= 1000){
+    timer4 = millis() - starttime3 +1; 
+   }
+   if (timer4 > 1000){
+        Serial.print(state);
+        Serial.print("\t");
+        Serial.print(millis());
+        Serial.print("\t");
         Serial.print("psi=");
         Serial.print(psi,4);
-        Serial.print(" T=");
+        Serial.print("\t");
+        Serial.print("T=");
         Serial.println(Temp);
+                //Serial.print(timer);
+           //Serial.print("\t");
+        //Serial.print(timer2);
+           //Serial.print("\t");
+        //Serial.print(timer3);
+       //Serial.print(offstate);
+
+        timer4 =0;
+   }
+           
      }
