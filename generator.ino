@@ -1,4 +1,14 @@
 #include <math.h>
+
+//Screen
+#include <Arduino.h>
+#include <Wire.h>
+#include <MicroLCD.h>
+
+//LCD_SH1106 lcd; /* for SH1106 OLED module */
+LCD_SSD1306 lcd; /* for SSD1306 OLED module */
+
+
 //MOTOR DRIVER
 const int motorAPin1 = 9;   // AIN1
 const int motorAPin2 = 8;   // AIN2
@@ -59,7 +69,7 @@ void setup() {
   analogWrite(PWMA, 100);
   digitalWrite(purgePin,LOW);
   digitalWrite(11,HIGH);
-  
+  lcd.begin();
   Serial.begin(9600);
 }
 
@@ -110,10 +120,21 @@ void loop() {
   //Serial.print("T");
   //Serial.println(Temp); 
   }
+while (analogRead(A1) < 5){
+ digitalWrite(enablePin,LOW);
+  lcd.clear();
+  lcd.setFontSize(FONT_SIZE_MEDIUM);
+   lcd.println("Start?");
+   delay(1000);
+}
 
-while (analogRead(A1) >2){
+
+while (analogRead(A1) >40){
   digitalWrite(enablePin,HIGH);
-
+    lcd.clear();
+  lcd.setFontSize(FONT_SIZE_MEDIUM);
+   lcd.println("Flushing..");
+   delay(1000);
 }
 
 
@@ -235,6 +256,15 @@ void prints (){
         Serial.print("\t");
         Serial.print("T=");
         Serial.println(Temp);
+        
+        lcd.clear();
+        lcd.setFontSize(FONT_SIZE_MEDIUM);
+	lcd.print("PSI= ");
+        lcd.println(psi,4);
+        lcd.print("Temp= ");
+        lcd.println(Temp);
+        lcd.println(analogRead(A1));
+      
                 //Serial.print(timer);
            //Serial.print("\t");
         //Serial.print(timer2);
